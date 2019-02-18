@@ -6,6 +6,12 @@
 //  Copyright © 2019 Ben Whitley. All rights reserved.
 //
 
+/*
+ Resources:
+ https://developers.giphy.com/explorer/
+ https://github.com/Flipboard/FLAnimatedImage
+ */
+
 import UIKit
 import FLAnimatedImage
 import Alamofire
@@ -26,8 +32,8 @@ class ViewController: UIViewController {
     func setupCollectionView() {
         let layout = UICollectionViewFlowLayout.init()
         layout.itemSize = CGSize(
-            width: 100.0,
-            height: 100.0
+            width: view.bounds.width,
+            height: view.bounds.width
         )
         
         collectionView = UICollectionView(

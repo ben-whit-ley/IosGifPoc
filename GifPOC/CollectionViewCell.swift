@@ -15,6 +15,7 @@ class CollectionViewCell: UICollectionViewCell {
     override init(frame: CGRect) {
         super.init(frame: frame)
         
+        imageView.contentMode = .scaleAspectFit
         imageView.frame = contentView.bounds
         contentView.addSubview(imageView)
     }
