@@ -7,14 +7,92 @@
 //
 
 import UIKit
+import FLAnimatedImage
+import Alamofire
+import SwiftyJSON
 
 class ViewController: UIViewController {
 
+    var collectionView: UICollectionView?
+    var gifs: [FLAnimatedImage] = []
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+        
+        setupCollectionView()
+        requestGifs()
     }
+    
+    func setupCollectionView() {
+        let layout = UICollectionViewFlowLayout.init()
+        layout.itemSize = CGSize(
+            width: 100.0,
+            height: 100.0
+        )
+        
+        collectionView = UICollectionView(
+            frame: view.bounds,
+            collectionViewLayout: layout
+        )
+        
+        collectionView?.register(
+            CollectionViewCell.self,
+            forCellWithReuseIdentifier: "GifCell"
+        )
+        
+        collectionView?.dataSource = self
+        if let cv = collectionView { view.addSubview(cv) }
+    }
+    
+    func requestGifs() {
+        let apiKey = "OrgzqLeDP0GLJZN5Z5ucN5aQaJ15GPLt"
 
-
+        Alamofire
+            .request("https://api.giphy.com/v1/gifs/trending",
+                     method: .get,
+                     parameters: ["api_key": apiKey],
+                     encoding: URLEncoding.default,
+                     headers: nil)
+            .responseData { [weak self] response in
+                guard
+                    let self = self,
+                    let data = response.data,
+                    let json = try? JSON(data: data)["data"].arrayValue
+                    else { return }
+                
+                self.parse(json)
+            }
+    }
+    
+    func parse(_ json: [JSON]) {
+        for gif in json {
+            guard
+                let urlString = gif["images"]["original"]["url"].string,
+                let url = URL(string: urlString),
+                let data = try? Data(contentsOf: url),
+                let image = FLAnimatedImage(animatedGIFData: data)
+                else { return }
+            
+            self.gifs.append(image)
+        }
+        collectionView?.reloadData()
+    }
 }
 
+extension ViewController: UICollectionViewDataSource {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return gifs.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        if let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: "GifCell",
+            for: indexPath) as? CollectionViewCell {
+            
+            cell.imageView.animatedImage = gifs[indexPath.row]
+            return cell
+        }
+        
+        return UICollectionViewCell()
+    }
+}
